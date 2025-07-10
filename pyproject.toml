@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "rdp-sessions-report"
+version = "0.1.0"
+description = "Скрипт для формирования отчётов по RDP-сессиям с серверов Windows"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+python-dotenv = "^1.0.0"
+pywinrm = "^0.4.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.0"
+black = "^23.0.0"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"] 
