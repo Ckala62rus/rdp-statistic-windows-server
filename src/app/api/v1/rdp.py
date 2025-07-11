@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request, Query
-from app.models.rdp import RdpSessionRequest, RdpSessionsResponse, RdpSession
+from app.models.rdp import RdpSessionsResponse, RdpSession
 from app.services.rdp_service import get_rdp_sessions
-from fastapi import Body
 from app.utils.logger import get_logger
 
 router = APIRouter()
