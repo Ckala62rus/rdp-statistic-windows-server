@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./src/.env:/app/src/.env:ro
+    environment:
+      - PYTHONPATH=/app/src
+    restart: unless-stopped 
