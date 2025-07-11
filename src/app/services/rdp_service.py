@@ -18,7 +18,7 @@ def parse_ps_datetime(ps_date):
         return datetime.fromtimestamp(timestamp)
     return None
 
-def get_rdp_sessions(start_date: str, end_date: str) -> list:
+def get_rdp_sessions(start_date: str, end_date: str) -> dict:
     load_dotenv()
     username = os.getenv('RDP_LOG_USERNAME')
     password = os.getenv('RDP_LOG_PASSWORD')
@@ -98,61 +98,51 @@ Get-WinEvent -LogName "Microsoft-Windows-TerminalServices-LocalSessionManager/Op
             "server": server
         })
 
-    # Формируем отчёт
-    report_rows = []
-    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-    end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-    target_dates = []
-    current_dt = start_dt
-    while current_dt <= end_dt:
-        target_dates.append(current_dt.strftime("%Y-%m-%d"))
-        current_dt += timedelta(days=1)
-
+    # Формируем отчёт с группировкой по дате и username
+    grouped = {}
     for (user, username), days in sessions.items():
-        for target_date in target_dates:
-            if target_date in days:
-                events = days[target_date]
-                events.sort(key=lambda x: x["datetime"])
-                i = 0
-                while i < len(events):
-                    if events[i]["type"] == 21:  # вход
-                        start_time = events[i]["datetime"]
-                        start_server = events[i]["server"]
-                        end_time = None
-                        end_server = None
-                        for j in range(i+1, len(events)):
-                            if events[j]["type"] == 23:
-                                end_time = events[j]["datetime"]
-                                end_server = events[j]["server"]
-                                break
-                        if end_time:
-                            duration = end_time - start_time
-                            report_rows.append({
-                                "date": target_date,
-                                "user_id": user,
-                                "username": username,
-                                "login_server": start_server,
-                                "logout_server": end_server,
-                                "login_time": start_time.strftime("%H:%M:%S"),
-                                "logout_time": end_time.strftime("%H:%M:%S"),
-                                "duration": str(duration)
-                            })
-                            i = j + 1
-                        else:
-                            end_time = start_time.replace(hour=23, minute=59, second=59)
-                            duration = end_time - start_time
-                            report_rows.append({
-                                "date": target_date,
-                                "user_id": user,
-                                "username": username,
-                                "login_server": start_server,
-                                "logout_server": "нет выхода",
-                                "login_time": start_time.strftime("%H:%M:%S"),
-                                "logout_time": end_time.strftime("%H:%M:%S"),
-                                "duration": str(duration) + " (нет выхода)"
-                            })
-                            i += 1
+        for date_str, events in days.items():
+            if date_str not in grouped:
+                grouped[date_str] = {}
+            if username not in grouped[date_str]:
+                grouped[date_str][username] = []
+            events.sort(key=lambda x: x["datetime"])
+            i = 0
+            while i < len(events):
+                if events[i]["type"] == 21:  # вход
+                    start_time = events[i]["datetime"]
+                    start_server = events[i]["server"]
+                    end_time = None
+                    end_server = None
+                    for j in range(i+1, len(events)):
+                        if events[j]["type"] == 23:
+                            end_time = events[j]["datetime"]
+                            end_server = events[j]["server"]
+                            break
+                    if end_time:
+                        duration = end_time - start_time
+                        grouped[date_str][username].append({
+                            "user_id": user,
+                            "login_server": start_server,
+                            "logout_server": end_server,
+                            "login_time": start_time.strftime("%H:%M:%S"),
+                            "logout_time": end_time.strftime("%H:%M:%S"),
+                            "duration": str(duration)
+                        })
+                        i = j + 1
                     else:
+                        end_time = start_time.replace(hour=23, minute=59, second=59)
+                        duration = end_time - start_time
+                        grouped[date_str][username].append({
+                            "user_id": user,
+                            "login_server": start_server,
+                            "logout_server": "нет выхода",
+                            "login_time": start_time.strftime("%H:%M:%S"),
+                            "logout_time": end_time.strftime("%H:%M:%S"),
+                            "duration": str(duration) + " (нет выхода)"
+                        })
                         i += 1
-    log.info(f"Сформировано {len(report_rows)} сессий для отчёта")
-    return report_rows 
+                else:
+                    i += 1
+    log.info(f"Сформировано {sum(len(u) for d in grouped.values() for u in d.values())} сессий для отчёта (группировка)")
+    return grouped 
