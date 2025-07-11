@@ -2,11 +2,16 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY src/pyproject.toml src/poetry.lock ./
+# Копируем файлы зависимостей
+COPY src/pyproject.toml ./
+COPY src/poetry.lock* ./
+
+# Устанавливаем Poetry и зависимости
 RUN pip install --no-cache-dir poetry && \
     poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi --no-root
 
+# Копируем исходный код
 COPY src/ ./src/
 
 ENV PYTHONPATH=/app/src
