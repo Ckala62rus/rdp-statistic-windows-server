@@ -9,6 +9,7 @@ from app.utils.logger import get_logger
 
 log = get_logger(__name__)
 
+
 # Функция для преобразования формата времени из PowerShell
 # Пример: "/Date(1745060200298)/" -> datetime
 def parse_ps_datetime(ps_date):
@@ -17,6 +18,7 @@ def parse_ps_datetime(ps_date):
         timestamp = int(match.group(0)) // 1000
         return datetime.fromtimestamp(timestamp)
     return None
+
 
 def get_rdp_sessions(start_date: str, end_date: str) -> dict:
     load_dotenv()
@@ -114,7 +116,7 @@ Get-WinEvent -LogName "Microsoft-Windows-TerminalServices-LocalSessionManager/Op
                     start_server = events[i]["server"]
                     end_time = None
                     end_server = None
-                    for j in range(i+1, len(events)):
+                    for j in range(i + 1, len(events)):
                         if events[j]["type"] == 23:
                             end_time = events[j]["datetime"]
                             end_server = events[j]["server"]
@@ -144,5 +146,6 @@ Get-WinEvent -LogName "Microsoft-Windows-TerminalServices-LocalSessionManager/Op
                         i += 1
                 else:
                     i += 1
-    log.info(f"Сформировано {sum(len(u) for d in grouped.values() for u in d.values())} сессий для отчёта (группировка)")
-    return grouped 
+    log.info(
+        f"Сформировано {sum(len(u) for d in grouped.values() for u in d.values())} сессий для отчёта (группировка)")
+    return grouped

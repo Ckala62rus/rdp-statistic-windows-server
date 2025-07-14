@@ -136,6 +136,7 @@ endpoint_grouped_description = """
 ```
 """
 
+
 @router.get(
     "/sessions",
     response_model=RdpSessionsGroupedResponse,
@@ -157,8 +158,8 @@ endpoint_grouped_description = """
     }
 )
 def get_sessions(
-    start_date: str = Query(..., description="Начальная дата периода отчёта (YYYY-MM-DD)", example="2025-07-01"),
-    end_date: str = Query(..., description="Конечная дата периода отчёта (YYYY-MM-DD)", example="2025-07-03")
+        start_date: str = Query(..., description="Начальная дата периода отчёта (YYYY-MM-DD)", example="2025-07-01"),
+        end_date: str = Query(..., description="Конечная дата периода отчёта (YYYY-MM-DD)", example="2025-07-03")
 ):
     log.info(f"GET /sessions: {start_date} - {end_date}")
     try:
@@ -170,4 +171,4 @@ def get_sessions(
         )
     except Exception as e:
         log.error(f"Ошибка при формировании отчёта: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
